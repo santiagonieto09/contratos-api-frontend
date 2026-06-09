@@ -9,9 +9,9 @@ const badgeVariants = cva(
         default: 'bg-primary-container text-on-primary-container',
         secondary: 'bg-secondary-container text-on-secondary-container',
         outline: 'border border-outline text-on-surface-variant',
-        interest: 'bg-orange-50 text-orange-700',
-        fee: 'bg-blue-50 text-blue-700',
-        total: 'bg-indigo-50 text-indigo-700',
+        interest: 'bg-data-interest/10 text-data-interest',
+        fee: 'bg-data-fee/10 text-data-fee',
+        total: 'bg-data-total/10 text-data-total',
       },
     },
     defaultVariants: {

@@ -5,23 +5,22 @@ import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ApiError } from '@/types'
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
+      toast.error('Las contraseñas no coinciden')
       return
     }
 
@@ -29,10 +28,11 @@ export default function Register() {
     try {
       const res = await authService.register(email, password)
       login(res.token)
+      toast.success('Cuenta creada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
       const api = err as { response?: { data?: ApiError } }
-      setError(api.response?.data?.error || 'Error al registrarse')
+      toast.error(api.response?.data?.error || 'Error al registrarse')
     } finally {
       setLoading(false)
     }
@@ -50,12 +50,6 @@ export default function Register() {
             Regístrate para gestionar tus contratos
           </p>
         </div>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-error-container px-3 py-2.5 text-sm text-on-error-container">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

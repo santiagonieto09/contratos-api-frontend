@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/AuthContext'
-import { LogOut, User, Menu, X, FileText, PlusCircle, BarChart3, LayoutDashboard } from 'lucide-react'
+import { LogOut, User, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
@@ -12,13 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar } from './Avatar'
 import { cn } from '@/lib/utils'
-
-const navLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/contratos/nuevo', label: 'Nuevo Contrato', icon: PlusCircle },
-  { to: '/proyeccion', label: 'Proyección', icon: BarChart3 },
-  { to: '/contratos', label: 'Mis Contratos', icon: FileText },
-]
+import { navLinks } from '@/lib/navigation'
 
 export function Header() {
   const { user, logout } = useAuth()

@@ -5,28 +5,28 @@ import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ApiError } from '@/types'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
     try {
       const res = await authService.login(email, password)
       login(res.token)
+      toast.success('Sesión iniciada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
       const api = err as { response?: { data?: ApiError } }
-      setError(api.response?.data?.error || 'Credenciales inválidas')
+      toast.error(api.response?.data?.error || 'Credenciales inválidas')
     } finally {
       setLoading(false)
     }
@@ -44,12 +44,6 @@ export default function Login() {
             Ingresa a tu panel de contratos
           </p>
         </div>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-error-container px-3 py-2.5 text-sm text-on-error-container">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Calculator, Save } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function CreateContract() {
   const navigate = useNavigate()
@@ -18,7 +19,6 @@ export default function CreateContract() {
     metodoPago: '',
     numeroMeses: '',
   })
-  const [errors, setErrors] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingMetodos, setLoadingMetodos] = useState(true)
   const [cuotas, setCuotas] = useState<Cuota[] | null>(null)
@@ -41,7 +41,6 @@ export default function CreateContract() {
 
   const handleProyectar = async () => {
     setProyectando(true)
-    setErrors('')
     try {
       const res = await contratoService.proyectar({
         valorTotal: Number(form.valorTotal),
@@ -51,7 +50,7 @@ export default function CreateContract() {
       })
       setCuotas(res.cuotas)
     } catch {
-      setErrors('Error al calcular proyección')
+      toast.error('Error al calcular proyección')
     } finally {
       setProyectando(false)
     }
@@ -59,7 +58,6 @@ export default function CreateContract() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrors('')
     setLoading(true)
     try {
       const res = await contratoService.crear({
@@ -69,10 +67,11 @@ export default function CreateContract() {
         metodoPago: form.metodoPago,
         numeroMeses: Number(form.numeroMeses),
       })
+      toast.success('Contrato creado correctamente')
       navigate(`/contratos/${res.contrato.id}`)
     } catch (err: unknown) {
       const api = err as { response?: { data?: { error?: string } } }
-      setErrors(api.response?.data?.error || 'Error al crear contrato')
+      toast.error(api.response?.data?.error || 'Error al crear contrato')
     } finally {
       setLoading(false)
     }
@@ -91,12 +90,6 @@ export default function CreateContract() {
           Ingresa los datos del contrato para generar la proyección de cuotas
         </p>
       </div>
-
-      {errors && (
-        <div className="rounded-md bg-error-container px-4 py-3 text-sm text-on-error-container">
-          {errors}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
