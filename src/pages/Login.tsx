@@ -6,26 +6,39 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ApiError } from '@/types'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+})
+
+type LoginForm = z.infer<typeof loginSchema>
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: LoginForm) => {
     setLoading(true)
     try {
-      const res = await authService.login(email, password)
+      const res = await authService.login(data.email, data.password)
       login(res.token)
       toast.success('Sesión iniciada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { data?: ApiError } }
+      const api = err as { response?: { data?: { error?: string } } }
       toast.error(api.response?.data?.error || 'Credenciales inválidas')
     } finally {
       setLoading(false)
@@ -45,31 +58,29 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label="Email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
             placeholder="tu@email.com"
             autoComplete="email"
+            error={errors.email?.message}
+            {...register('email')}
           />
 
           <div className="relative">
             <Input
               label="Contraseña"
               type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
               placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
+              error={errors.password?.message}
+              {...register('password')}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-on-surface-variant hover:text-on-surface transition-colors"
+              className="absolute right-3 top-[38px] text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
               aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

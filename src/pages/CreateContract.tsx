@@ -8,45 +8,75 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Calculator, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const contractSchema = z.object({
+  numeroContrato: z.string().min(1, 'El número de contrato es requerido'),
+  fechaContrato: z.string().min(1, 'La fecha es requerida'),
+  valorTotal: z.string().min(1, 'El valor total es requerido').refine(
+    (v) => !isNaN(Number(v)) && Number(v) >= 0,
+    'Debe ser un número válido'
+  ),
+  metodoPago: z.string().min(1, 'Selecciona un método de pago'),
+  numeroMeses: z.string().min(1, 'El número de meses es requerido').refine(
+    (v) => {
+      const n = Number(v)
+      return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= 120
+    },
+    'Debe ser un número entero entre 1 y 120'
+  ),
+})
+
+type ContractForm = z.infer<typeof contractSchema>
 
 export default function CreateContract() {
   const navigate = useNavigate()
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
-  const [form, setForm] = useState({
-    numeroContrato: '',
-    fechaContrato: new Date().toISOString().split('T')[0] ?? '',
-    valorTotal: '',
-    metodoPago: '',
-    numeroMeses: '',
-  })
   const [loading, setLoading] = useState(false)
   const [loadingMetodos, setLoadingMetodos] = useState(true)
   const [cuotas, setCuotas] = useState<Cuota[] | null>(null)
   const [proyectando, setProyectando] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<ContractForm>({
+    resolver: zodResolver(contractSchema),
+    defaultValues: {
+      numeroContrato: '',
+      fechaContrato: new Date().toISOString().split('T')[0] ?? '',
+      valorTotal: '',
+      metodoPago: '',
+      numeroMeses: '',
+    },
+  })
+
+  const watchedValorTotal = watch('valorTotal')
+  const watchedNumeroMeses = watch('numeroMeses')
+  const watchedMetodoPago = watch('metodoPago')
 
   useEffect(() => {
     contratoService
       .metodosPago()
       .then((m) => {
         setMetodos(m)
-        if (m.length > 0) setForm((f) => ({ ...f, metodoPago: m[0]!.id }))
       })
       .finally(() => setLoadingMetodos(false))
   }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    setCuotas(null)
-  }
 
   const handleProyectar = async () => {
     setProyectando(true)
     try {
       const res = await contratoService.proyectar({
-        valorTotal: Number(form.valorTotal),
-        numeroMeses: Number(form.numeroMeses),
-        metodoPago: form.metodoPago,
-        fechaContrato: form.fechaContrato,
+        valorTotal: Number(watchedValorTotal),
+        numeroMeses: Number(watchedNumeroMeses),
+        metodoPago: watchedMetodoPago,
+        fechaContrato: new Date().toISOString().split('T')[0],
       })
       setCuotas(res.cuotas)
     } catch {
@@ -56,16 +86,15 @@ export default function CreateContract() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: ContractForm) => {
     setLoading(true)
     try {
       const res = await contratoService.crear({
-        numeroContrato: form.numeroContrato,
-        fechaContrato: form.fechaContrato,
-        valorTotal: Number(form.valorTotal),
-        metodoPago: form.metodoPago,
-        numeroMeses: Number(form.numeroMeses),
+        numeroContrato: data.numeroContrato,
+        fechaContrato: data.fechaContrato,
+        valorTotal: Number(data.valorTotal),
+        metodoPago: data.metodoPago,
+        numeroMeses: Number(data.numeroMeses),
       })
       toast.success('Contrato creado correctamente')
       navigate(`/contratos/${res.contrato.id}`)
@@ -78,7 +107,7 @@ export default function CreateContract() {
   }
 
   const totalCuotas = cuotas?.reduce((s, c) => s + c.total, 0) ?? 0
-  const canPreview = form.valorTotal && form.numeroMeses && form.metodoPago
+  const canPreview = watchedValorTotal && watchedNumeroMeses && watchedMetodoPago
 
   return (
     <div className="container-form space-y-8">
@@ -91,47 +120,39 @@ export default function CreateContract() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
           <div className="grid gap-5 sm:grid-cols-2">
             <Input
               label="Número de contrato"
               type="text"
-              name="numeroContrato"
-              value={form.numeroContrato}
-              onChange={handleChange}
-              required
               placeholder="Ej: CT-001"
+              error={errors.numeroContrato?.message}
+              {...register('numeroContrato')}
             />
             <Input
               label="Fecha del contrato"
               type="date"
-              name="fechaContrato"
-              value={form.fechaContrato}
-              onChange={handleChange}
-              required
+              error={errors.fechaContrato?.message}
+              {...register('fechaContrato')}
             />
             <Input
               label="Valor total ($)"
               type="number"
-              name="valorTotal"
-              value={form.valorTotal}
-              onChange={handleChange}
-              required
+              placeholder="1000.00"
               min="0"
               step="0.01"
-              placeholder="1000.00"
+              error={errors.valorTotal?.message}
+              {...register('valorTotal')}
             />
             <Input
               label="Número de meses"
               type="number"
-              name="numeroMeses"
-              value={form.numeroMeses}
-              onChange={handleChange}
-              required
+              placeholder="12"
               min="1"
               max="120"
-              placeholder="12"
+              error={errors.numeroMeses?.message}
+              {...register('numeroMeses')}
             />
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-on-surface-variant">
@@ -143,21 +164,35 @@ export default function CreateContract() {
                   Cargando...
                 </div>
               ) : (
-                <Select
-                  value={form.metodoPago}
-                  onValueChange={(v) => setForm({ ...form, metodoPago: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar método" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {metodos.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="metodoPago"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v)
+                        setCuotas(null)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar método" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {metodos.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
+              {errors.metodoPago?.message && (
+                <p className="text-xs text-error" role="alert">
+                  {errors.metodoPago.message}
+                </p>
               )}
             </div>
           </div>

@@ -4,34 +4,48 @@ import { useAuth } from '@/context/AuthContext'
 import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ApiError } from '@/types'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const registerSchema = z
+  .object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(6, 'Mínimo 6 caracteres'),
+    confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  })
+
+type RegisterForm = z.infer<typeof registerSchema>
 
 export default function Register() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (password !== confirmPassword) {
-      toast.error('Las contraseñas no coinciden')
-      return
-    }
-
+  const onSubmit = async (data: RegisterForm) => {
     setLoading(true)
     try {
-      const res = await authService.register(email, password)
+      const res = await authService.register(data.email, data.password)
       login(res.token)
       toast.success('Cuenta creada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { data?: ApiError } }
+      const api = err as { response?: { data?: { error?: string } } }
       toast.error(api.response?.data?.error || 'Error al registrarse')
     } finally {
       setLoading(false)
@@ -51,37 +65,53 @@ export default function Register() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label="Email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
             placeholder="tu@email.com"
             autoComplete="email"
+            error={errors.email?.message}
+            {...register('email')}
           />
 
-          <Input
-            label="Contraseña"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            placeholder="Mínimo 6 caracteres"
-            autoComplete="new-password"
-          />
+          <div className="relative">
+            <Input
+              label="Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Mínimo 6 caracteres"
+              autoComplete="new-password"
+              error={errors.password?.message}
+              {...register('password')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-[38px] text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
-          <Input
-            label="Confirmar contraseña"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            placeholder="Repite la contraseña"
-            autoComplete="new-password"
-          />
+          <div className="relative">
+            <Input
+              label="Confirmar contraseña"
+              type={showConfirm ? 'text' : 'password'}
+              placeholder="Repite la contraseña"
+              autoComplete="new-password"
+              error={errors.confirmPassword?.message}
+              {...register('confirmPassword')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-3 top-[38px] text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+              aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
           <Button type="submit" disabled={loading} className="w-full">
             {loading && <Loader2 className="animate-spin" size={16} />}
