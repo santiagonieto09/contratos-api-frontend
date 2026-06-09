@@ -17,9 +17,10 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            end={to === '/contratos'}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ease-out-expo',
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ease-out-expo cursor-pointer',
                 isActive
                   ? 'bg-primary-container text-on-primary-container'
                   : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
