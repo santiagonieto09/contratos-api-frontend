@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { contratoService } from '@/services/contratoService'
 import type { MetodoPago, Cuota } from '@/types'
-import { Save, Loader2, Calculator } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, Calculator, Save } from 'lucide-react'
 
 export default function CreateContract() {
   const navigate = useNavigate()
@@ -30,7 +34,7 @@ export default function CreateContract() {
       .finally(() => setLoadingMetodos(false))
   }, [])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setCuotas(null)
   }
@@ -75,54 +79,47 @@ export default function CreateContract() {
   }
 
   const totalCuotas = cuotas?.reduce((s, c) => s + c.total, 0) ?? 0
+  const canPreview = form.valorTotal && form.numeroMeses && form.metodoPago
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="container-form space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Nuevo Contrato</h1>
-        <p className="text-sm text-gray-500">Ingresa los datos del contrato</p>
+        <h1 className="text-2xl font-bold tracking-tight text-on-surface">
+          Nuevo contrato
+        </h1>
+        <p className="mt-1 text-sm text-on-surface-variant">
+          Ingresa los datos del contrato para generar la proyección de cuotas
+        </p>
       </div>
 
       {errors && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-error-container px-4 py-3 text-sm text-on-error-container">
           {errors}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-white p-6 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Número de Contrato
-            </label>
-            <input
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Input
+              label="Número de contrato"
               type="text"
               name="numeroContrato"
               value={form.numeroContrato}
               onChange={handleChange}
               required
               placeholder="Ej: CT-001"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Fecha del Contrato
-            </label>
-            <input
+            <Input
+              label="Fecha del contrato"
               type="date"
               name="fechaContrato"
               value={form.fechaContrato}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Valor Total ($)
-            </label>
-            <input
+            <Input
+              label="Valor total ($)"
               type="number"
               name="valorTotal"
               value={form.valorTotal}
@@ -131,14 +128,9 @@ export default function CreateContract() {
               min="0"
               step="0.01"
               placeholder="1000.00"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Número de Meses
-            </label>
-            <input
+            <Input
+              label="Número de meses"
               type="number"
               name="numeroMeses"
               value={form.numeroMeses}
@@ -147,101 +139,97 @@ export default function CreateContract() {
               min="1"
               max="120"
               placeholder="12"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-on-surface-variant">
+                Método de pago
+              </label>
+              {loadingMetodos ? (
+                <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">
+                  <Loader2 className="animate-spin" size={14} />
+                  Cargando...
+                </div>
+              ) : (
+                <Select
+                  value={form.metodoPago}
+                  onValueChange={(v) => setForm({ ...form, metodoPago: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar método" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {metodos.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Método de Pago
-            </label>
-            {loadingMetodos ? (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Loader2 className="animate-spin" size={16} /> Cargando...
-              </div>
-            ) : (
-              <select
-                name="metodoPago"
-                value={form.metodoPago}
-                onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+
+          {canPreview && (
+            <div className="mt-5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleProyectar}
+                disabled={proyectando}
+                className="w-full"
               >
-                {metodos.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nombre}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                {proyectando ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <Calculator size={16} />
+                )}
+                {proyectando ? 'Calculando...' : 'Vista previa de cuotas'}
+              </Button>
+            </div>
+          )}
+
+          {cuotas && (
+            <div className="mt-5 rounded-md border border-outline-variant/30 bg-surface-low p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-medium text-on-surface">
+                  {cuotas.length} cuota{cuotas.length !== 1 ? 's' : ''} proyectada{cuotas.length !== 1 ? 's' : ''}
+                </p>
+                <p className="text-sm font-semibold text-data-total tabular-nums">
+                  Total: ${totalCuotas.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="max-h-44 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-outline-variant/30 text-left text-on-surface-variant">
+                      <th className="pb-1 font-medium">#</th>
+                      <th className="pb-1 text-right font-medium">Base</th>
+                      <th className="pb-1 text-right font-medium">Interés</th>
+                      <th className="pb-1 text-right font-medium">Tarifa</th>
+                      <th className="pb-1 text-right font-medium">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cuotas.map((c) => (
+                      <tr key={c.numeroCuota}>
+                        <td className="py-0.5 text-on-surface tabular-nums">{c.numeroCuota}</td>
+                        <td className="py-0.5 text-right tabular-nums">${c.valorBase.toFixed(2)}</td>
+                        <td className="py-0.5 text-right text-data-interest tabular-nums">${c.interes.toFixed(2)}</td>
+                        <td className="py-0.5 text-right text-data-fee tabular-nums">${c.tarifaPago.toFixed(2)}</td>
+                        <td className="py-0.5 text-right font-medium text-data-total tabular-nums">${c.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
-        {form.valorTotal && form.numeroMeses && form.metodoPago && (
-          <button
-            type="button"
-            onClick={handleProyectar}
-            disabled={proyectando}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-indigo-200 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-60"
-          >
-            {proyectando ? (
-              <Loader2 className="animate-spin" size={18} />
-            ) : (
-              <Calculator size={18} />
-            )}
-            {proyectando ? 'Calculando...' : 'Vista Previa de Cuotas'}
-          </button>
-        )}
-
-        {cuotas && (
-          <div className="rounded-lg border bg-gray-50 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700">
-                Proyección - {cuotas.length} cuota{cuotas.length !== 1 ? 's' : ''}
-              </p>
-              <p className="text-sm font-bold text-indigo-700">
-                Total: ${totalCuotas.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="max-h-40 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b text-left font-medium text-gray-500">
-                    <th className="pb-1">#</th>
-                    <th className="pb-1 text-right">Base</th>
-                    <th className="pb-1 text-right">Interés</th>
-                    <th className="pb-1 text-right">Tarifa</th>
-                    <th className="pb-1 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cuotas.map((c) => (
-                    <tr key={c.numeroCuota}>
-                      <td className="py-0.5">{c.numeroCuota}</td>
-                      <td className="py-0.5 text-right">
-                        ${c.valorBase.toFixed(2)}
-                      </td>
-                      <td className="py-0.5 text-right">${c.interes.toFixed(2)}</td>
-                      <td className="py-0.5 text-right">
-                        ${c.tarifaPago.toFixed(2)}
-                      </td>
-                      <td className="py-0.5 text-right font-medium">
-                        ${c.total.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-          {loading ? 'Creando...' : 'Crear Contrato'}
-        </button>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+          {loading ? 'Creando contrato...' : 'Crear contrato'}
+        </Button>
       </form>
     </div>
   )

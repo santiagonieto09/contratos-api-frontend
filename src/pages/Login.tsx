@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { authService } from '@/services/authService'
-import { LogIn, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import type { ApiError } from '@/types'
 
 export default function Login() {
@@ -24,82 +26,74 @@ export default function Login() {
       navigate('/dashboard')
     } catch (err: unknown) {
       const api = err as { response?: { data?: ApiError } }
-      setError(api.response?.data?.error || 'Error al iniciar sesión')
+      setError(api.response?.data?.error || 'Credenciales inválidas')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-2xl border bg-white p-8 shadow-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 text-2xl font-bold text-white">
+    <div className="w-full max-w-sm">
+      <div className="rounded-lg border border-outline-variant/50 bg-surface-bright p-7 shadow-sm">
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-primary text-lg font-bold text-on-primary">
             C
           </div>
-          <h1 className="text-2xl font-bold">Iniciar Sesión</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-xl font-semibold text-on-surface">Iniciar sesión</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
             Ingresa a tu panel de contratos
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-md bg-error-container px-3 py-2.5 text-sm text-on-error-container">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="tu@email.com"
+            autoComplete="email"
+          />
+
+          <div className="relative">
+            <Input
+              label="Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="tu@email.com"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              placeholder="Ingresa tu contraseña"
+              autoComplete="current-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-[38px] text-on-surface-variant hover:text-on-surface transition-colors"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Contraseña
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••"
-                className="w-full rounded-lg border px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading && <Loader2 className="animate-spin" size={16} />}
             {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-on-surface-variant">
           ¿No tienes cuenta?{' '}
-          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link
+            to="/register"
+            className="font-medium text-primary hover:text-primary-hover transition-colors"
+          >
             Registrarse
           </Link>
         </p>

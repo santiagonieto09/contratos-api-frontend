@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { contratoService } from '@/services/contratoService'
 import type { MetodoPago, Cuota } from '@/types'
-import { Calculator, Loader2, BarChart3 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, Calculator, TrendingUp } from 'lucide-react'
+
+function formatCurrency(n: number) {
+  return n.toLocaleString('es-CO', { minimumFractionDigits: 2 })
+}
 
 export default function ProjectionSimulator() {
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
@@ -41,11 +48,6 @@ export default function ProjectionSimulator() {
       .finally(() => setLoadingMetodos(false))
   }, [])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    setResultado(null)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -65,201 +67,209 @@ export default function ProjectionSimulator() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Simulador de Proyección</h1>
-        <p className="text-sm text-gray-500">
-          Calcula cuotas antes de crear un contrato
+    <div className="container-page space-y-8">
+      <div className="text-center">
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-primary-container text-on-primary-container">
+          <TrendingUp size={20} />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-on-surface">
+          Simulador de proyección
+        </h1>
+        <p className="mt-1 text-sm text-on-surface-variant">
+          Calcula cuotas antes de crear un contrato.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mx-auto max-w-md rounded-md bg-error-container px-4 py-3 text-sm text-on-error-container">
           {error}
         </div>
       )}
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-xl border bg-white p-6 shadow-sm"
+        className="mx-auto max-w-lg space-y-5 rounded-lg border border-outline-variant/30 bg-surface-bright p-6 shadow-sm"
       >
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Valor Total ($)
-            </label>
-            <input
-              type="number"
-              name="valorTotal"
-              value={form.valorTotal}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              placeholder="1000.00"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Número de Meses
-            </label>
-            <input
-              type="number"
-              name="numeroMeses"
-              value={form.numeroMeses}
-              onChange={handleChange}
-              required
-              min="1"
-              max="120"
-              placeholder="12"
-              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Método de Pago
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Input
+            label="Valor total ($)"
+            type="number"
+            name="valorTotal"
+            value={form.valorTotal}
+            onChange={(e) => { setForm({ ...form, valorTotal: e.target.value }); setResultado(null) }}
+            required
+            min="0"
+            step="0.01"
+            placeholder="1000.00"
+          />
+          <Input
+            label="Número de meses"
+            type="number"
+            name="numeroMeses"
+            value={form.numeroMeses}
+            onChange={(e) => { setForm({ ...form, numeroMeses: e.target.value }); setResultado(null) }}
+            required
+            min="1"
+            max="120"
+            placeholder="12"
+          />
+          <div className="space-y-1.5 sm:col-span-2">
+            <label className="text-sm font-medium text-on-surface-variant">
+              Método de pago
             </label>
             {loadingMetodos ? (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Loader2 className="animate-spin" size={16} /> Cargando...
+              <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">
+                <Loader2 className="animate-spin" size={14} />
+                Cargando...
               </div>
             ) : (
-              <select
-                name="metodoPago"
+              <Select
                 value={form.metodoPago}
-                onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                onValueChange={(v) => { setForm({ ...form, metodoPago: v }); setResultado(null) }}
               >
-                {metodos.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nombre} ({m.tasaInteres} interés / {m.tasaTarifa} tarifa)
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar método" />
+                </SelectTrigger>
+                <SelectContent>
+                  {metodos.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading ? <Loader2 className="animate-spin" size={18} /> : <Calculator size={18} />}
-          {loading ? 'Calculando...' : 'Calcular Proyección'}
-        </button>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? <Loader2 className="animate-spin" size={16} /> : <Calculator size={16} />}
+          {loading ? 'Calculando...' : 'Calcular proyección'}
+        </Button>
       </form>
 
       {resultado && (
-        <>
-          <div className="rounded-xl border bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <BarChart3 className="text-indigo-600" size={22} />
-              <h2 className="text-lg font-semibold">Detalles de la Proyección</h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">Valor Original</p>
-                <p className="text-lg font-bold">
-                  ${resultado.proyeccion.valorTotal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Projection details */}
+          <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
+            <h2 className="mb-5 text-base font-semibold text-on-surface">
+              Detalles de la proyección
+            </h2>
+            <div className="flex flex-wrap gap-x-10 gap-y-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Valor original
+                </p>
+                <p className="mt-0.5 text-lg font-semibold text-on-surface tabular-nums">
+                  ${formatCurrency(resultado.proyeccion.valorTotal)}
                 </p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">Método de Pago</p>
-                <p className="text-lg font-bold capitalize">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Método de pago
+                </p>
+                <p className="mt-0.5 text-lg font-semibold text-on-surface capitalize">
                   {resultado.proyeccion.metodoPago}
                 </p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">Tasa Interés</p>
-                <p className="text-lg font-bold">{resultado.proyeccion.tasaInteres}</p>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Tasa interés
+                </p>
+                <p className="mt-0.5 text-lg font-semibold text-data-interest tabular-nums">
+                  {resultado.proyeccion.tasaInteres}
+                </p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">Tasa Tarifa</p>
-                <p className="text-lg font-bold">{resultado.proyeccion.tasaTarifa}</p>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Tasa tarifa
+                </p>
+                <p className="mt-0.5 text-lg font-semibold text-data-fee tabular-nums">
+                  {resultado.proyeccion.tasaTarifa}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
-              <p className="text-xs text-gray-500">Total Cuotas</p>
-              <p className="mt-1 text-xl font-bold">
+          {/* Summary */}
+          <div className="flex flex-wrap gap-x-10 gap-y-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                Total cuotas
+              </p>
+              <p className="mt-0.5 text-xl font-semibold text-on-surface tabular-nums">
                 {resultado.resumen.totalCuotas}
               </p>
             </div>
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
-              <p className="text-xs text-gray-500">Total Interés</p>
-              <p className="mt-1 text-xl font-bold text-orange-600">
-                ${resultado.resumen.totalInteres.toFixed(2)}
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                Total interés
+              </p>
+              <p className="mt-0.5 text-xl font-semibold text-data-interest tabular-nums">
+                ${formatCurrency(resultado.resumen.totalInteres)}
               </p>
             </div>
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
-              <p className="text-xs text-gray-500">Total Tarifa</p>
-              <p className="mt-1 text-xl font-bold text-blue-600">
-                ${resultado.resumen.totalTarifa.toFixed(2)}
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                Total tarifa
+              </p>
+              <p className="mt-0.5 text-xl font-semibold text-data-fee tabular-nums">
+                ${formatCurrency(resultado.resumen.totalTarifa)}
               </p>
             </div>
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
-              <p className="text-xs text-gray-500">Total a Pagar</p>
-              <p className="mt-1 text-xl font-bold text-indigo-600">
-                ${resultado.resumen.totalAPagar.toFixed(2)}
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                Total a pagar
+              </p>
+              <p className="mt-0.5 text-xl font-semibold text-data-total tabular-nums">
+                ${formatCurrency(resultado.resumen.totalAPagar)}
               </p>
             </div>
           </div>
 
-          <div className="rounded-xl bg-indigo-50 p-4 text-center">
-            <p className="text-sm text-indigo-700">
+          {/* Diferencia */}
+          <div className="rounded-md bg-primary-container/50 px-5 py-3 text-center">
+            <p className="text-sm font-medium text-on-primary-container">
               Diferencia sobre valor original:{' '}
-              <span className="font-bold">
-                ${resultado.resumen.diferenciaSobreValorOriginal.toFixed(2)}
+              <span className="font-bold tabular-nums">
+                ${formatCurrency(resultado.resumen.diferenciaSobreValorOriginal)}
               </span>
             </p>
           </div>
 
-          <div className="rounded-xl border bg-white shadow-sm">
-            <div className="border-b px-6 py-4">
-              <h2 className="text-lg font-semibold">Tabla de Cuotas</h2>
-            </div>
-            <div className="overflow-x-auto">
+          {/* Full installments table */}
+          <div>
+            <h2 className="mb-4 text-base font-semibold text-on-surface">
+              Tabla de cuotas
+            </h2>
+            <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-bright">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-                    <th className="px-6 py-3">#</th>
-                    <th className="px-6 py-3 text-right">Valor Base</th>
-                    <th className="px-6 py-3 text-right">Interés</th>
-                    <th className="px-6 py-3 text-right">Tarifa</th>
-                    <th className="px-6 py-3 text-right">Total</th>
-                    <th className="px-6 py-3 text-right">Fecha</th>
+                  <tr className="border-b border-outline-variant/30 bg-surface-low">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-on-surface-variant">#</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Valor base</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Interés</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Tarifa</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Total</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Fecha</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-outline-variant/20">
                   {resultado.cuotas.map((c) => (
-                    <tr key={c.numeroCuota} className="transition hover:bg-gray-50">
-                      <td className="px-6 py-3 font-medium">{c.numeroCuota}</td>
-                      <td className="px-6 py-3 text-right">
-                        ${c.valorBase.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-3 text-right text-orange-600">
-                        ${c.interes.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-3 text-right text-blue-600">
-                        ${c.tarifaPago.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-3 text-right font-medium text-indigo-600">
-                        ${c.total.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-3 text-right text-gray-600">
-                        {c.fechaPago}
-                      </td>
+                    <tr key={c.numeroCuota} className="transition-colors duration-150 ease-out-expo hover:bg-surface-container">
+                      <td className="px-4 py-3 font-medium text-on-surface tabular-nums">{c.numeroCuota}</td>
+                      <td className="px-4 py-3 text-right text-on-surface tabular-nums">${formatCurrency(c.valorBase)}</td>
+                      <td className="px-4 py-3 text-right text-data-interest tabular-nums">${formatCurrency(c.interes)}</td>
+                      <td className="px-4 py-3 text-right text-data-fee tabular-nums">${formatCurrency(c.tarifaPago)}</td>
+                      <td className="px-4 py-3 text-right font-medium text-data-total tabular-nums">${formatCurrency(c.total)}</td>
+                      <td className="px-4 py-3 text-right text-on-surface-variant tabular-nums">{c.fechaPago}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

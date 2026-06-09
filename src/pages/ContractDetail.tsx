@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { contratoService } from '@/services/contratoService'
 import type { Contrato, Cuota, ResumenCuotas } from '@/types'
-import {
-  ArrowLeft,
-  Loader2,
-  Wallet,
-  Calendar,
-  CreditCard,
-  BarChart3,
-} from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+
+function formatCurrency(n: number) {
+  return n.toLocaleString('es-CO', { minimumFractionDigits: 2 })
+}
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
@@ -36,133 +36,171 @@ export default function ContractDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+      <div className="space-y-6">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-32 w-full" />
+        <div className="flex gap-6">
+          <Skeleton className="h-20 w-40" />
+          <Skeleton className="h-20 w-40" />
+          <Skeleton className="h-20 w-40" />
+          <Skeleton className="h-20 w-40" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
 
   if (error || !contrato) {
     return (
-      <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="rounded-md bg-error-container px-4 py-3 text-sm text-on-error-container">
         {error || 'Contrato no encontrado'}
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-8">
+      {/* Breadcrumb */}
       <Link
         to="/contratos"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         <ArrowLeft size={16} />
         Volver a contratos
       </Link>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{contrato.numeroContrato}</h1>
-            <p className="text-sm text-gray-500">
-              Creado el {contrato.creadoEn}
-            </p>
-          </div>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium capitalize text-indigo-700">
-            {contrato.metodoPago}
-          </span>
+      {/* Contract header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface">
+            {contrato.numeroContrato}
+          </h1>
+          <p className="mt-0.5 text-sm text-on-surface-variant">
+            Creado el {contrato.creadoEn}
+          </p>
         </div>
+        <Badge variant={contrato.metodoPago === 'paypal' ? 'default' : 'secondary'}>
+          {contrato.metodoPago}
+        </Badge>
+      </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="flex items-center gap-3 rounded-lg border bg-gray-50 p-4">
-            <Wallet className="text-indigo-600" size={22} />
-            <div>
-              <p className="text-xs text-gray-500">Valor Total</p>
-              <p className="text-lg font-bold">
-                ${contrato.valorTotal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-lg border bg-gray-50 p-4">
-            <Calendar className="text-indigo-600" size={22} />
-            <div>
-              <p className="text-xs text-gray-500">Fecha</p>
-              <p className="text-lg font-bold">{contrato.fechaContrato}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-lg border bg-gray-50 p-4">
-            <CreditCard className="text-indigo-600" size={22} />
-            <div>
-              <p className="text-xs text-gray-500">Meses</p>
-              <p className="text-lg font-bold">{contrato.numeroMeses}</p>
-            </div>
-          </div>
+      {/* Contract info row */}
+      <div className="flex flex-wrap gap-x-10 gap-y-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+            Valor total
+          </p>
+          <p className="mt-0.5 text-xl font-semibold text-on-surface tabular-nums">
+            ${formatCurrency(contrato.valorTotal)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+            Fecha contrato
+          </p>
+          <p className="mt-0.5 text-xl font-semibold text-on-surface">
+            {contrato.fechaContrato}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+            Plazo
+          </p>
+          <p className="mt-0.5 text-xl font-semibold text-on-surface tabular-nums">
+            {contrato.numeroMeses} meses
+          </p>
         </div>
       </div>
 
+      {/* Summary blocks */}
       {resumen && (
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <p className="text-xs text-gray-500">Total Cuotas</p>
-            <p className="mt-1 text-xl font-bold">{resumen.totalCuotas}</p>
-          </div>
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <p className="text-xs text-gray-500">Total Interés</p>
-            <p className="mt-1 text-xl font-bold text-orange-600">
-              ${resumen.totalInteres.toFixed(2)}
+        <div className="flex flex-wrap gap-x-10 gap-y-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+              Total cuotas
+            </p>
+            <p className="mt-0.5 text-xl font-semibold text-on-surface tabular-nums">
+              {resumen.totalCuotas}
             </p>
           </div>
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <p className="text-xs text-gray-500">Total Tarifa</p>
-            <p className="mt-1 text-xl font-bold text-blue-600">
-              ${resumen.totalTarifa.toFixed(2)}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+              Total interés
+            </p>
+            <p className="mt-0.5 text-xl font-semibold text-data-interest tabular-nums">
+              ${formatCurrency(resumen.totalInteres)}
             </p>
           </div>
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <p className="text-xs text-gray-500">Total a Pagar</p>
-            <p className="mt-1 text-xl font-bold text-indigo-600">
-              ${resumen.totalAPagar.toFixed(2)}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+              Total tarifa
+            </p>
+            <p className="mt-0.5 text-xl font-semibold text-data-fee tabular-nums">
+              ${formatCurrency(resumen.totalTarifa)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+              Total a pagar
+            </p>
+            <p className="mt-0.5 text-xl font-semibold text-data-total tabular-nums">
+              ${formatCurrency(resumen.totalAPagar)}
             </p>
           </div>
         </div>
       )}
 
-      <div className="rounded-xl border bg-white shadow-sm">
-        <div className="border-b px-6 py-4">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <BarChart3 size={20} />
-            Proyección de Cuotas
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
+      {/* Installments table */}
+      <div>
+        <h2 className="mb-4 text-base font-semibold text-on-surface">
+          Proyección de cuotas
+        </h2>
+        <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-bright">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-                <th className="px-6 py-3">#</th>
-                <th className="px-6 py-3 text-right">Valor Base</th>
-                <th className="px-6 py-3 text-right">Interés</th>
-                <th className="px-6 py-3 text-right">Tarifa</th>
-                <th className="px-6 py-3 text-right">Total</th>
-                <th className="px-6 py-3 text-right">Fecha de Pago</th>
+              <tr className="border-b border-outline-variant/30 bg-surface-low">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  #
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Valor base
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Interés
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Tarifa
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Total
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  Fecha de pago
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-outline-variant/20">
               {cuotas.map((c) => (
-                <tr key={c.numeroCuota} className="transition hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium">{c.numeroCuota}</td>
-                  <td className="px-6 py-3 text-right">
-                    ${c.valorBase.toFixed(2)}
+                <tr
+                  key={c.numeroCuota}
+                  className="transition-colors duration-150 ease-out-expo hover:bg-surface-container"
+                >
+                  <td className="px-4 py-3 font-medium text-on-surface tabular-nums">
+                    {c.numeroCuota}
                   </td>
-                  <td className="px-6 py-3 text-right text-orange-600">
-                    ${c.interes.toFixed(2)}
+                  <td className="px-4 py-3 text-right text-on-surface tabular-nums">
+                    ${formatCurrency(c.valorBase)}
                   </td>
-                  <td className="px-6 py-3 text-right text-blue-600">
-                    ${c.tarifaPago.toFixed(2)}
+                  <td className="px-4 py-3 text-right text-data-interest tabular-nums">
+                    ${formatCurrency(c.interes)}
                   </td>
-                  <td className="px-6 py-3 text-right font-medium text-indigo-600">
-                    ${c.total.toFixed(2)}
+                  <td className="px-4 py-3 text-right text-data-fee tabular-nums">
+                    ${formatCurrency(c.tarifaPago)}
                   </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  <td className="px-4 py-3 text-right font-medium text-data-total tabular-nums">
+                    ${formatCurrency(c.total)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-on-surface-variant tabular-nums">
                     {c.fechaPago}
                   </td>
                 </tr>

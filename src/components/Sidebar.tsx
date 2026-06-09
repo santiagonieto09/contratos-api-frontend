@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { FileText, PlusCircle, BarChart3, LayoutDashboard } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,21 +11,22 @@ const links = [
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r bg-white lg:block">
-      <nav className="flex flex-col gap-1 p-4">
+    <aside className="hidden w-56 shrink-0 border-r border-outline-variant/50 bg-surface-bright lg:block">
+      <nav className="flex flex-col gap-0.5 p-3 pt-5" aria-label="Navegación principal">
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+              cn(
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ease-out-expo',
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`
+                  ? 'bg-primary-container text-on-primary-container'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              )
             }
           >
-            <Icon size={18} />
+            <Icon size={16} className="shrink-0" />
             {label}
           </NavLink>
         ))}
