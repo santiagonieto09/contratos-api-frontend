@@ -45,7 +45,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-on-surface-variant hover:bg-surface-container transition-colors"
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
                   aria-label="Menú de usuario"
                 >
                   <Avatar email={user.email} size="sm" />
