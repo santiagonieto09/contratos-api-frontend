@@ -5,17 +5,36 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Calculator, TrendingUp } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
-import { MAX_MESES_PLAZO } from '@/lib/utils'
+import { formatCurrency, MAX_MESES_PLAZO } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const MAX_VALOR = 999_999_999.99
+
+const proyeccionSchema = z.object({
+  valorTotal: z.string()
+    .min(1, 'El valor total es requerido')
+    .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Debe ser mayor a 0')
+    .refine((v) => Number(v) <= MAX_VALOR, `Valor máximo ${MAX_VALOR.toLocaleString('es-CO')}`),
+  numeroMeses: z.string()
+    .min(1, 'El número de meses es requerido')
+    .refine(
+      (v) => {
+        const n = Number(v)
+        return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= MAX_MESES_PLAZO
+      },
+      `Debe ser un número entero entre 1 y ${MAX_MESES_PLAZO}`
+    ),
+  metodoPago: z.string()
+    .min(1, 'Selecciona un método de pago'),
+})
+
+type ProyeccionForm = z.infer<typeof proyeccionSchema>
 
 export default function ProjectionSimulator() {
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
-  const [form, setForm] = useState({
-    valorTotal: '',
-    numeroMeses: '',
-    metodoPago: '',
-  })
   const [loadingMetodos, setLoadingMetodos] = useState(true)
   const [loading, setLoading] = useState(false)
   const [resultado, setResultado] = useState<{
@@ -37,6 +56,20 @@ export default function ProjectionSimulator() {
   } | null>(null)
   const [error, setError] = useState('')
 
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<ProyeccionForm>({
+    resolver: zodResolver(proyeccionSchema),
+    defaultValues: {
+      valorTotal: '',
+      numeroMeses: '',
+      metodoPago: '',
+    },
+  })
+
   useEffect(() => {
     let cancelled = false
     contratoService
@@ -44,23 +77,25 @@ export default function ProjectionSimulator() {
       .then((m) => {
         if (cancelled) return
         setMetodos(m)
-        if (m.length > 0) setForm((f) => ({ ...f, metodoPago: m[0]!.id }))
+        if (m.length > 0) {
+          reset({ metodoPago: m[0]!.id })
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingMetodos(false)
       })
     return () => { cancelled = true }
-  }, [])
+  }, [reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: ProyeccionForm) => {
     setLoading(true)
     setError('')
+    setResultado(null)
     try {
       const res = await contratoService.proyectar({
-        valorTotal: Number(form.valorTotal),
-        numeroMeses: Number(form.numeroMeses),
-        metodoPago: form.metodoPago,
+        valorTotal: Number(data.valorTotal),
+        numeroMeses: Number(data.numeroMeses),
+        metodoPago: data.metodoPago,
       })
       setResultado(res)
     } catch {
@@ -91,57 +126,89 @@ export default function ProjectionSimulator() {
       )}
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="mx-auto max-w-lg space-y-5 rounded-lg border border-outline-variant/30 bg-surface-bright p-6 shadow-sm"
       >
         <div className="grid gap-5 sm:grid-cols-2">
-          <Input
-            label="Valor total ($)"
-            type="number"
+          <Controller
             name="valorTotal"
-            value={form.valorTotal}
-            onChange={(e) => { setForm({ ...form, valorTotal: e.target.value }); setResultado(null) }}
-            required
-            min="0"
-            step="0.01"
-            placeholder="1000.00"
+            control={control}
+            render={({ field }) => (
+              <Input
+                label="Valor total ($)"
+                description="Monto total del contrato, mayor a 0"
+                type="number"
+                placeholder="1000.00"
+                min="0.01"
+                step="0.01"
+                error={errors.valorTotal?.message}
+                {...field}
+              />
+            )}
           />
-          <Input
-            label="Número de meses"
-            type="number"
+          <Controller
             name="numeroMeses"
-            value={form.numeroMeses}
-            onChange={(e) => { setForm({ ...form, numeroMeses: e.target.value }); setResultado(null) }}
-            required
-            min="1"
-            max={String(MAX_MESES_PLAZO)}
-            placeholder="12"
+            control={control}
+            render={({ field }) => (
+              <Input
+                label="Número de meses"
+                description={`Plazo entre 1 y ${MAX_MESES_PLAZO} meses`}
+                type="number"
+                placeholder="12"
+                min="1"
+                max={String(MAX_MESES_PLAZO)}
+                error={errors.numeroMeses?.message}
+                {...field}
+              />
+            )}
           />
           <div className="space-y-1.5 sm:col-span-2">
-            <label className="text-sm font-medium text-on-surface-variant">
-              Método de pago
-            </label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm font-medium text-on-surface-variant">
+                Método de pago
+              </label>
+              <span
+                className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
+                title="Selecciona la forma de pago del contrato"
+              >
+                ?
+              </span>
+            </div>
             {loadingMetodos ? (
               <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">
                 <Loader2 className="animate-spin" size={14} />
                 Cargando...
               </div>
             ) : (
-              <Select
-                value={form.metodoPago}
-                onValueChange={(v) => { setForm({ ...form, metodoPago: v }); setResultado(null) }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar método" />
-                </SelectTrigger>
-                <SelectContent>
-                  {metodos.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="metodoPago"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => {
+                      field.onChange(v)
+                      setResultado(null)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar método" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {metodos.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            )}
+            {errors.metodoPago?.message && (
+              <p className="text-xs text-error" role="alert">
+                {errors.metodoPago.message}
+              </p>
             )}
           </div>
         </div>
@@ -154,7 +221,6 @@ export default function ProjectionSimulator() {
 
       {resultado && (
         <div className="mx-auto max-w-4xl space-y-8">
-          {/* Projection details */}
           <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
             <h2 className="mb-5 text-base font-semibold text-on-surface">
               Detalles de la proyección
@@ -195,7 +261,6 @@ export default function ProjectionSimulator() {
             </div>
           </div>
 
-          {/* Summary */}
           <div className="flex flex-wrap gap-x-10 gap-y-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
@@ -231,7 +296,6 @@ export default function ProjectionSimulator() {
             </div>
           </div>
 
-          {/* Diferencia */}
           <div className="rounded-md bg-primary-container/50 px-5 py-3 text-center">
             <p className="text-sm font-medium text-on-primary-container">
               Diferencia sobre valor original:{' '}
@@ -241,7 +305,6 @@ export default function ProjectionSimulator() {
             </p>
           </div>
 
-          {/* Full installments table */}
           <div>
             <h2 className="mb-4 text-base font-semibold text-on-surface">
               Tabla de cuotas

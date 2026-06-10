@@ -15,21 +15,31 @@ import { MAX_MESES_PLAZO, formatCurrency } from '@/lib/utils'
 import type { ApiErrorResponse } from '@/types'
 import { CuotasTable } from '@/components/CuotasTable'
 
+const MAX_VALOR = 999_999_999.99
+
 const contractSchema = z.object({
-  numeroContrato: z.string().min(1, 'El número de contrato es requerido').regex(/^[a-zA-Z0-9\-_]+$/, 'Formato inválido (solo letras, números, guiones)'),
-  fechaContrato: z.string().min(1, 'La fecha es requerida'),
-  valorTotal: z.string().min(1, 'El valor total es requerido').refine(
-    (v) => !isNaN(Number(v)) && Number(v) >= 0,
-    'Debe ser un número válido'
-  ),
-  metodoPago: z.string().min(1, 'Selecciona un método de pago'),
-  numeroMeses: z.string().min(1, 'El número de meses es requerido').refine(
-    (v) => {
-      const n = Number(v)
-      return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= MAX_MESES_PLAZO
-    },
-    `Debe ser un número entero entre 1 y ${MAX_MESES_PLAZO}`
-  ),
+  numeroContrato: z.string()
+    .min(1, 'El número de contrato es requerido')
+    .min(3, 'Mínimo 3 caracteres')
+    .max(30, 'Máximo 30 caracteres')
+    .regex(/^[a-zA-Z0-9\-_\/]+$/, 'Solo letras, números, guiones y slash'),
+  fechaContrato: z.string()
+    .min(1, 'La fecha es requerida'),
+  valorTotal: z.string()
+    .min(1, 'El valor total es requerido')
+    .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Debe ser mayor a 0')
+    .refine((v) => Number(v) <= MAX_VALOR, `Valor máximo ${MAX_VALOR.toLocaleString('es-CO')}`),
+  metodoPago: z.string()
+    .min(1, 'Selecciona un método de pago'),
+  numeroMeses: z.string()
+    .min(1, 'El número de meses es requerido')
+    .refine(
+      (v) => {
+        const n = Number(v)
+        return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= MAX_MESES_PLAZO
+      },
+      `Debe ser un número entero entre 1 y ${MAX_MESES_PLAZO}`
+    ),
 })
 
 type ContractForm = z.infer<typeof contractSchema>
@@ -134,13 +144,16 @@ export default function CreateContract() {
           <div className="grid gap-5 sm:grid-cols-2">
             <Input
               label="Número de contrato"
+              description="Ej: CT-001, CONTR-2024/01"
               type="text"
               placeholder="Ej: CT-001"
+              maxLength={30}
               error={errors.numeroContrato?.message}
               {...register('numeroContrato')}
             />
             <Input
               label="Fecha del contrato"
+              description="No puede ser anterior a hoy"
               type="date"
               min={today}
               error={errors.fechaContrato?.message}
@@ -148,15 +161,17 @@ export default function CreateContract() {
             />
             <Input
               label="Valor total ($)"
+              description="Monto total del contrato, mayor a 0"
               type="number"
               placeholder="1000.00"
-              min="0"
+              min="0.01"
               step="0.01"
               error={errors.valorTotal?.message}
               {...register('valorTotal')}
             />
             <Input
               label="Número de meses"
+              description={`Plazo entre 1 y ${MAX_MESES_PLAZO} meses`}
               type="number"
               placeholder="12"
               min="1"
@@ -165,9 +180,17 @@ export default function CreateContract() {
               {...register('numeroMeses')}
             />
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-on-surface-variant">
-                Método de pago
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-sm font-medium text-on-surface-variant">
+                  Método de pago
+                </label>
+                <span
+                  className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
+                  title="Selecciona la forma de pago del contrato"
+                >
+                  ?
+                </span>
+              </div>
               {loadingMetodos ? (
                 <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">
                   <Loader2 className="animate-spin" size={14} />

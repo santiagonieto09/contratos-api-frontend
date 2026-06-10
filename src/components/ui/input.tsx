@@ -3,22 +3,35 @@ import { cn } from '@/lib/utils'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
+  description?: string
   error?: ReactNode
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, ...props }, ref) => {
+  ({ className, label, description, error, id, ...props }, ref) => {
     const inputId = id || props.name
 
     return (
       <div className="space-y-1.5">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium text-on-surface-variant"
-          >
-            {label}
-          </label>
+        {(label || description) && (
+          <div className="flex items-center gap-1.5">
+            {label && (
+              <label
+                htmlFor={inputId}
+                className="text-sm font-medium text-on-surface-variant"
+              >
+                {label}
+              </label>
+            )}
+            {description && (
+              <span
+                className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
+                title={description}
+              >
+                ?
+              </span>
+            )}
+          </div>
         )}
         <input
           id={inputId}
