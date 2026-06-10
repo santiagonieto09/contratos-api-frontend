@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 
 import { formatCurrency } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
+import { DownloadButton } from '@/components/DownloadButton'
+import type { DownloadPayload } from '@/services/downloadService'
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
@@ -82,10 +84,32 @@ export default function ContractDetail() {
           <p className="mt-0.5 text-sm text-on-surface-variant">
             Creado el {contrato.creadoEn}
           </p>
+          <Badge variant={contrato.metodoPago === 'paypal' ? 'default' : 'secondary'} className="mt-2">
+            {contrato.metodoPago}
+          </Badge>
         </div>
-        <Badge variant={contrato.metodoPago === 'paypal' ? 'default' : 'secondary'}>
-          {contrato.metodoPago}
-        </Badge>
+        <DownloadButton
+          payload={{
+            title: `Contrato ${contrato.numeroContrato}`,
+            filename: `contrato-${contrato.numeroContrato}`,
+            infoRows: [
+              { label: 'Número', value: contrato.numeroContrato },
+              { label: 'Fecha', value: contrato.fechaContrato },
+              { label: 'Valor Total', value: `$${formatCurrency(contrato.valorTotal)}` },
+              { label: 'Plazo', value: `${contrato.numeroMeses} meses` },
+              { label: 'Método de pago', value: contrato.metodoPago },
+            ],
+            summaryRows: resumen
+              ? [
+                  { label: 'Total Cuotas', value: resumen.totalCuotas.toString(), color: undefined },
+                  { label: 'Total Interés', value: resumen.totalInteres.toFixed(2), color: '#D92D20' },
+                  { label: 'Total Tarifa', value: resumen.totalTarifa.toFixed(2), color: '#B42318' },
+                  { label: 'Total a Pagar', value: resumen.totalAPagar.toFixed(2), color: '#039855' },
+                ]
+              : [],
+            cuotas,
+          }}
+        />
       </div>
 
       {/* Contract info row */}

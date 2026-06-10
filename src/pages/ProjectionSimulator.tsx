@@ -8,6 +8,8 @@ import { Loader2, Calculator, TrendingUp, CircleHelp } from 'lucide-react'
 import { formatCurrency, MAX_MESES_PLAZO } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { DownloadButton } from '@/components/DownloadButton'
+import type { DownloadPayload } from '@/services/downloadService'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -227,9 +229,31 @@ export default function ProjectionSimulator() {
       {resultado && (
         <div className="mx-auto max-w-4xl space-y-8">
           <div className="rounded-lg border border-outline-variant/30 bg-surface-bright p-6">
-            <h2 className="mb-5 text-base font-semibold text-on-surface">
-              Detalles de la proyección
-            </h2>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-on-surface">
+                Detalles de la proyección
+              </h2>
+              <DownloadButton
+                payload={{
+                  title: 'Proyección de Contrato',
+                  filename: `proyeccion-${Date.now()}`,
+                  infoRows: [
+                    { label: 'Valor Original', value: `$${formatCurrency(resultado.proyeccion.valorTotal)}` },
+                    { label: 'Número de Meses', value: resultado.proyeccion.numeroMeses.toString() },
+                    { label: 'Método de Pago', value: resultado.proyeccion.metodoPago },
+                    { label: 'Tasa Interés', value: resultado.proyeccion.tasaInteres },
+                    { label: 'Tasa Tarifa', value: resultado.proyeccion.tasaTarifa },
+                  ],
+                  summaryRows: [
+                    { label: 'Total Cuotas', value: resultado.resumen.totalCuotas.toString(), color: undefined },
+                    { label: 'Total Interés', value: resultado.resumen.totalInteres.toFixed(2), color: '#D92D20' },
+                    { label: 'Total Tarifa', value: resultado.resumen.totalTarifa.toFixed(2), color: '#B42318' },
+                    { label: 'Total a Pagar', value: resultado.resumen.totalAPagar.toFixed(2), color: '#039855' },
+                  ],
+                  cuotas: resultado.cuotas,
+                }}
+              />
+            </div>
             <div className="flex flex-wrap gap-x-10 gap-y-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
