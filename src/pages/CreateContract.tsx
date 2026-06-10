@@ -12,6 +12,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { MAX_MESES_PLAZO, formatCurrency } from '@/lib/utils'
+import type { ApiErrorResponse } from '@/types'
 import { CuotasTable } from '@/components/CuotasTable'
 
 const contractSchema = z.object({
@@ -107,7 +108,7 @@ export default function CreateContract() {
       toast.success('Contrato creado correctamente')
       navigate(`/contratos/${res.contrato.id}`)
     } catch (err: unknown) {
-      const api = err as { response?: { data?: { error?: string } } }
+      const api = err as ApiErrorResponse
       toast.error(api.response?.data?.error || 'Error al crear contrato')
     } finally {
       setLoading(false)
@@ -159,7 +160,7 @@ export default function CreateContract() {
               type="number"
               placeholder="12"
               min="1"
-              max="120"
+              max={String(MAX_MESES_PLAZO)}
               error={errors.numeroMeses?.message}
               {...register('numeroMeses')}
             />

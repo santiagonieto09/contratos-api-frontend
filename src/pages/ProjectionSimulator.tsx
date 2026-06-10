@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Calculator, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { MAX_MESES_PLAZO } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
 
 export default function ProjectionSimulator() {
@@ -113,7 +114,7 @@ export default function ProjectionSimulator() {
             onChange={(e) => { setForm({ ...form, numeroMeses: e.target.value }); setResultado(null) }}
             required
             min="1"
-            max="120"
+            max={String(MAX_MESES_PLAZO)}
             placeholder="12"
           />
           <div className="space-y-1.5 sm:col-span-2">
