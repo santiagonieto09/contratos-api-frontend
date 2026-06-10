@@ -31,6 +31,8 @@ const contractSchema = z.object({
 
 type ContractForm = z.infer<typeof contractSchema>
 
+const today = new Date().toISOString().split('T')[0] ?? ''
+
 export default function CreateContract() {
   const navigate = useNavigate()
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
@@ -133,6 +135,7 @@ export default function CreateContract() {
             <Input
               label="Fecha del contrato"
               type="date"
+              min={today}
               error={errors.fechaContrato?.message}
               {...register('fechaContrato')}
             />

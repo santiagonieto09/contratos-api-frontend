@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Logo } from '@/components/Logo'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -56,8 +57,8 @@ export default function Register() {
     <div className="w-full max-w-sm">
       <div className="rounded-lg border border-outline-variant/50 bg-surface-bright p-7 shadow-sm">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-primary text-lg font-bold text-on-primary">
-            C
+          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-primary text-on-primary">
+            <Logo className="h-6 w-6" />
           </div>
           <h1 className="text-xl font-semibold text-on-surface">Crear cuenta</h1>
           <p className="mt-1 text-sm text-on-surface-variant">

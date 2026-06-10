@@ -3,14 +3,15 @@ import { useAuth } from '@/context/AuthContext'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { Sidebar } from './Sidebar'
+import { Logo } from './Logo'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function LoadingScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center gap-3 bg-surface">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-lg font-bold text-on-primary">
-          C
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-on-primary">
+          <Logo className="h-6 w-6" />
         </div>
         <div className="space-y-2">
           <Skeleton className="h-3 w-32" />

@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar } from './Avatar'
+import { Logo } from './Logo'
 import { cn } from '@/lib/utils'
 import { navLinks } from '@/lib/navigation'
 
@@ -23,8 +24,8 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-(--breakpoint-2xl) items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-on-primary">
-              C
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-on-primary">
+              <Logo className="h-5 w-5" />
             </div>
             <span className="text-base font-semibold tracking-tight text-on-surface">
               Gestión de Contratos
