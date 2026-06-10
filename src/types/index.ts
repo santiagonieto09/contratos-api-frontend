@@ -68,3 +68,10 @@ export interface ApiError {
   detalles?: Record<string, string>
   mensaje?: string
 }
+
+export interface ApiErrorResponse {
+  response?: {
+    status?: number
+    data?: ApiError
+  }
+}

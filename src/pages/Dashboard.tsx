@@ -6,6 +6,7 @@ import { FileText, Plus, TrendingUp, Wallet, ArrowRight, Loader2 } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatCurrency } from '@/lib/utils'
 
 export default function Dashboard() {
   const [contratos, setContratos] = useState<Contrato[]>([])
@@ -13,12 +14,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     Promise.all([contratoService.listar(), contratoService.metodosPago()])
       .then(([c, m]) => {
+        if (cancelled) return
         setContratos(c.contratos)
         setMetodos(m)
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [])
 
   if (loading) {
@@ -40,7 +46,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10">
-      {/* Header section */}
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-on-surface">
@@ -58,7 +63,6 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Metrics row - not cards, just typography */}
       <div className="flex flex-wrap gap-x-10 gap-y-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
@@ -73,7 +77,7 @@ export default function Dashboard() {
             Valor total
           </p>
           <p className="mt-0.5 text-2xl font-semibold text-on-surface tabular-nums">
-            ${totalValor.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+            ${formatCurrency(totalValor)}
           </p>
         </div>
         <div>
@@ -86,10 +90,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Two-column layout: contracts + payment methods */}
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Contracts list */}
-        <div className="lg:col-span-2">
+      <div className="lg:col-span-2">
           <h2 className="mb-4 text-base font-semibold text-on-surface">
             Contratos recientes
           </h2>
@@ -124,7 +126,7 @@ export default function Dashboard() {
                         {c.numeroContrato}
                       </p>
                       <p className="text-xs text-on-surface-variant tabular-nums">
-                        ${c.valorTotal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                        ${formatCurrency(c.valorTotal)}
                         <span className="mx-1.5">&middot;</span>
                         {c.fechaContrato}
                       </p>
@@ -155,8 +157,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Payment methods */}
-        <div>
+      <div>
           <h2 className="mb-4 text-base font-semibold text-on-surface">
             Métodos de pago
           </h2>

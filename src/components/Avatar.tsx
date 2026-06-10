@@ -23,7 +23,7 @@ export function Avatar({ email, size = 'md' }: AvatarProps) {
         sizeMap[size]
       )}
       title={email}
-      aria-hidden="true"
+      aria-label={email}
     >
       {getInitials(email)}
     </div>

@@ -7,9 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 
-function formatCurrency(n: number) {
-  return n.toLocaleString('es-CO', { minimumFractionDigits: 2 })
-}
+import { formatCurrency } from '@/lib/utils'
+import { CuotasTable } from '@/components/CuotasTable'
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>()
@@ -21,17 +20,22 @@ export default function ContractDetail() {
 
   useEffect(() => {
     if (!id) return
+    let cancelled = false
     Promise.all([
       contratoService.obtener(id),
       contratoService.obtenerCuotas(id),
     ])
       .then(([c, cu]) => {
+        if (cancelled) return
         setContrato(c)
         setCuotas(cu.cuotas)
         setResumen(cu.resumen)
       })
       .catch(() => setError('Error al cargar el contrato'))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [id])
 
   if (loading) {
@@ -155,59 +159,7 @@ export default function ContractDetail() {
         <h2 className="mb-4 text-base font-semibold text-on-surface">
           Proyección de cuotas
         </h2>
-        <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-bright">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-outline-variant/30 bg-surface-low">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  #
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  Valor base
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  Interés
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  Tarifa
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  Total
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  Fecha de pago
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant/20">
-              {cuotas.map((c) => (
-                <tr
-                  key={c.numeroCuota}
-                  className="transition-colors duration-150 ease-out-expo hover:bg-surface-container"
-                >
-                  <td className="px-4 py-3 font-medium text-on-surface tabular-nums">
-                    {c.numeroCuota}
-                  </td>
-                  <td className="px-4 py-3 text-right text-on-surface tabular-nums">
-                    ${formatCurrency(c.valorBase)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-data-interest tabular-nums">
-                    ${formatCurrency(c.interes)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-data-fee tabular-nums">
-                    ${formatCurrency(c.tarifaPago)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-data-total tabular-nums">
-                    ${formatCurrency(c.total)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-on-surface-variant tabular-nums">
-                    {c.fechaPago}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <CuotasTable cuotas={cuotas} />
       </div>
     </div>
   )

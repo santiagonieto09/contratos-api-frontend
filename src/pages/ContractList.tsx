@@ -7,22 +7,26 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useSearch } from '@/hooks/useSearch'
+import { formatCurrency } from '@/lib/utils'
 
 export default function ContractList() {
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const { query: search, setQuery: setSearch, filtered } = useSearch(contratos, (c) => c.numeroContrato)
 
   useEffect(() => {
+    let cancelled = false
     contratoService
       .listar()
-      .then((data) => setContratos(data.contratos))
-      .finally(() => setLoading(false))
+      .then((data) => {
+        if (!cancelled) setContratos(data.contratos)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [])
-
-  const filtered = contratos.filter((c) =>
-    c.numeroContrato.toLowerCase().includes(search.toLowerCase())
-  )
 
   return (
     <div className="space-y-6">
@@ -116,8 +120,8 @@ export default function ContractList() {
                   <td className="px-4 py-3.5 text-on-surface-variant">
                     {c.fechaContrato}
                   </td>
-                  <td className="px-4 py-3.5 text-right font-medium text-on-surface tabular-nums">
-                    ${c.valorTotal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                    <td className="px-4 py-3.5 text-right font-medium text-on-surface tabular-nums">
+                      ${formatCurrency(c.valorTotal)}
                   </td>
                   <td className="px-4 py-3.5">
                     <Badge variant={c.metodoPago === 'paypal' ? 'default' : 'secondary'}>

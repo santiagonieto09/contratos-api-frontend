@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Calculator, TrendingUp } from 'lucide-react'
-
-function formatCurrency(n: number) {
-  return n.toLocaleString('es-CO', { minimumFractionDigits: 2 })
-}
+import { formatCurrency } from '@/lib/utils'
+import { CuotasTable } from '@/components/CuotasTable'
 
 export default function ProjectionSimulator() {
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
@@ -39,13 +37,18 @@ export default function ProjectionSimulator() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     contratoService
       .metodosPago()
       .then((m) => {
+        if (cancelled) return
         setMetodos(m)
         if (m.length > 0) setForm((f) => ({ ...f, metodoPago: m[0]!.id }))
       })
-      .finally(() => setLoadingMetodos(false))
+      .finally(() => {
+        if (!cancelled) setLoadingMetodos(false)
+      })
+    return () => { cancelled = true }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -242,32 +245,7 @@ export default function ProjectionSimulator() {
             <h2 className="mb-4 text-base font-semibold text-on-surface">
               Tabla de cuotas
             </h2>
-            <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-bright">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-outline-variant/30 bg-surface-low">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-on-surface-variant">#</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Valor base</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Interés</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Tarifa</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Total</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-on-surface-variant">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/20">
-                  {resultado.cuotas.map((c) => (
-                    <tr key={c.numeroCuota} className="transition-colors duration-150 ease-out-expo hover:bg-surface-container">
-                      <td className="px-4 py-3 font-medium text-on-surface tabular-nums">{c.numeroCuota}</td>
-                      <td className="px-4 py-3 text-right text-on-surface tabular-nums">${formatCurrency(c.valorBase)}</td>
-                      <td className="px-4 py-3 text-right text-data-interest tabular-nums">${formatCurrency(c.interes)}</td>
-                      <td className="px-4 py-3 text-right text-data-fee tabular-nums">${formatCurrency(c.tarifaPago)}</td>
-                      <td className="px-4 py-3 text-right font-medium text-data-total tabular-nums">${formatCurrency(c.total)}</td>
-                      <td className="px-4 py-3 text-right text-on-surface-variant tabular-nums">{c.fechaPago}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <CuotasTable cuotas={resultado.cuotas} />
           </div>
         </div>
       )}

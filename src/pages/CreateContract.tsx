@@ -11,9 +11,11 @@ import { toast } from 'sonner'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { MAX_MESES_PLAZO, formatCurrency } from '@/lib/utils'
+import { CuotasTable } from '@/components/CuotasTable'
 
 const contractSchema = z.object({
-  numeroContrato: z.string().min(1, 'El número de contrato es requerido'),
+  numeroContrato: z.string().min(1, 'El número de contrato es requerido').regex(/^[a-zA-Z0-9\-_]+$/, 'Formato inválido (solo letras, números, guiones)'),
   fechaContrato: z.string().min(1, 'La fecha es requerida'),
   valorTotal: z.string().min(1, 'El valor total es requerido').refine(
     (v) => !isNaN(Number(v)) && Number(v) >= 0,
@@ -23,9 +25,9 @@ const contractSchema = z.object({
   numeroMeses: z.string().min(1, 'El número de meses es requerido').refine(
     (v) => {
       const n = Number(v)
-      return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= 120
+      return !isNaN(n) && Number.isInteger(n) && n >= 1 && n <= MAX_MESES_PLAZO
     },
-    'Debe ser un número entero entre 1 y 120'
+    `Debe ser un número entero entre 1 y ${MAX_MESES_PLAZO}`
   ),
 })
 
@@ -58,26 +60,30 @@ export default function CreateContract() {
     },
   })
 
-  const watchedValorTotal = watch('valorTotal')
-  const watchedNumeroMeses = watch('numeroMeses')
-  const watchedMetodoPago = watch('metodoPago')
+  const valorTotal = watch('valorTotal')
+  const numeroMeses = watch('numeroMeses')
+  const metodoPago = watch('metodoPago')
 
   useEffect(() => {
+    let cancelled = false
     contratoService
       .metodosPago()
       .then((m) => {
-        setMetodos(m)
+        if (!cancelled) setMetodos(m)
       })
-      .finally(() => setLoadingMetodos(false))
+      .finally(() => {
+        if (!cancelled) setLoadingMetodos(false)
+      })
+    return () => { cancelled = true }
   }, [])
 
   const handleProyectar = async () => {
     setProyectando(true)
     try {
       const res = await contratoService.proyectar({
-        valorTotal: Number(watchedValorTotal),
-        numeroMeses: Number(watchedNumeroMeses),
-        metodoPago: watchedMetodoPago,
+        valorTotal: Number(valorTotal),
+        numeroMeses: Number(numeroMeses),
+        metodoPago: metodoPago,
         fechaContrato: new Date().toISOString().split('T')[0],
       })
       setCuotas(res.cuotas)
@@ -109,7 +115,7 @@ export default function CreateContract() {
   }
 
   const totalCuotas = cuotas?.reduce((s, c) => s + c.total, 0) ?? 0
-  const canPreview = watchedValorTotal && watchedNumeroMeses && watchedMetodoPago
+  const canPreview = valorTotal && numeroMeses && metodoPago
 
   return (
     <div className="container-form space-y-8">
@@ -226,32 +232,11 @@ export default function CreateContract() {
                   {cuotas.length} cuota{cuotas.length !== 1 ? 's' : ''} proyectada{cuotas.length !== 1 ? 's' : ''}
                 </p>
                 <p className="text-sm font-semibold text-data-total tabular-nums">
-                  Total: ${totalCuotas.toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                  Total: ${formatCurrency(totalCuotas)}
                 </p>
               </div>
               <div className="max-h-44 overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-outline-variant/30 text-left text-on-surface-variant">
-                      <th className="pb-1 font-medium">#</th>
-                      <th className="pb-1 text-right font-medium">Base</th>
-                      <th className="pb-1 text-right font-medium">Interés</th>
-                      <th className="pb-1 text-right font-medium">Tarifa</th>
-                      <th className="pb-1 text-right font-medium">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cuotas.map((c) => (
-                      <tr key={c.numeroCuota}>
-                        <td className="py-0.5 text-on-surface tabular-nums">{c.numeroCuota}</td>
-                        <td className="py-0.5 text-right tabular-nums">${c.valorBase.toFixed(2)}</td>
-                        <td className="py-0.5 text-right text-data-interest tabular-nums">${c.interes.toFixed(2)}</td>
-                        <td className="py-0.5 text-right text-data-fee tabular-nums">${c.tarifaPago.toFixed(2)}</td>
-                        <td className="py-0.5 text-right font-medium text-data-total tabular-nums">${c.total.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <CuotasTable cuotas={cuotas} showFecha={false} />
               </div>
             </div>
           )}

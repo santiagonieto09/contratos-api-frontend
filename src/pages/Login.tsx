@@ -10,11 +10,8 @@ import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-
-const passwordRequirements = [
-  'Mínimo 6 caracteres',
-  'No debe ser una contraseña comprometida',
-]
+import { PASSWORD_REQUIREMENTS } from '@/lib/utils'
+import type { ApiErrorResponse } from '@/types'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -45,7 +42,7 @@ export default function Login() {
       toast.success('Sesión iniciada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { status?: number; data?: { mensaje?: string; error?: string; detalles?: Record<string, string> } } }
+      const api = err as ApiErrorResponse
       const data = api.response?.data
       if (data?.detalles) {
         for (const [field, message] of Object.entries(data.detalles)) {
@@ -93,7 +90,7 @@ export default function Login() {
               autoComplete="current-password"
               error={errors.password ? (
                 <ul className="mt-1 space-y-0.5">
-                  {passwordRequirements.map((req) => (
+                  {PASSWORD_REQUIREMENTS.map((req) => (
                     <li key={req} className="flex items-center gap-1.5 text-[11px]">
                       <span className="inline-block h-1 w-1 rounded-full bg-error" />
                       {req}

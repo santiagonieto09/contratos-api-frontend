@@ -1,12 +1,18 @@
 import axios from 'axios'
 
+let navigateToLogin: (() => void) | null = null
+
+export function setNavigateToLogin(fn: () => void) {
+  navigateToLogin = fn
+}
+
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -17,8 +23,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      sessionStorage.removeItem('token')
+      navigateToLogin?.()
     }
     return Promise.reject(error)
   }

@@ -17,25 +17,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    let cancelled = false
+    const token = sessionStorage.getItem('token')
     if (token) {
       authService
         .perfil()
-        .then(setUser)
-        .catch(() => localStorage.removeItem('token'))
-        .finally(() => setLoading(false))
+        .then((u) => {
+          if (!cancelled) setUser(u)
+        })
+        .catch(() => sessionStorage.removeItem('token'))
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
     } else {
       setLoading(false)
     }
+    return () => { cancelled = true }
   }, [])
 
   const login = (token: string) => {
-    localStorage.setItem('token', token)
+    sessionStorage.setItem('token', token)
     authService.perfil().then(setUser)
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
+    sessionStorage.removeItem('token')
     setUser(null)
   }
 

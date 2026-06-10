@@ -10,11 +10,8 @@ import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-
-const passwordRequirements = [
-  'Mínimo 6 caracteres',
-  'No debe ser una contraseña comprometida',
-]
+import { PASSWORD_REQUIREMENTS } from '@/lib/utils'
+import type { ApiErrorResponse } from '@/types'
 
 const registerSchema = z
   .object({
@@ -52,7 +49,7 @@ export default function Register() {
       toast.success('Cuenta creada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { status?: number; data?: { mensaje?: string; error?: string; detalles?: Record<string, string> } } }
+      const api = err as ApiErrorResponse
       const data = api.response?.data
       if (data?.detalles) {
         for (const [field, message] of Object.entries(data.detalles)) {
@@ -111,7 +108,7 @@ export default function Register() {
             </button>
             {(
               <ul className="mt-1 space-y-0.5">
-                {passwordRequirements.map((req) => (
+                {PASSWORD_REQUIREMENTS.map((req) => (
                   <li key={req} className={`flex items-center gap-1.5 text-[11px] ${errors.password ? 'text-error' : 'text-on-surface-variant'}`}>
                     <span className={`inline-block h-1 w-1 rounded-full ${errors.password ? 'bg-error' : 'bg-outline-variant'}`} />
                     {req}

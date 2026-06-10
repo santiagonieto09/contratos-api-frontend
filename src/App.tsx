@@ -1,7 +1,8 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import { PrivateLayout, PublicLayout, GuestLayout } from '@/components/Layout'
+import { setNavigateToLogin } from '@/services/api'
 
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
@@ -11,10 +12,19 @@ const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
 const CreateContract = lazy(() => import('@/pages/CreateContract'))
 const ProjectionSimulator = lazy(() => import('@/pages/ProjectionSimulator'))
 
+function NavigateSetter() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    setNavigateToLogin(() => navigate('/login'))
+  }, [navigate])
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <NavigateSetter />
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-surface" />}>
           <Routes>
             <Route element={<GuestLayout />}>
@@ -29,8 +39,6 @@ export default function App() {
               <Route path="/contratos/:id" element={<ContractDetail />} />
               <Route path="/proyeccion" element={<ProjectionSimulator />} />
             </Route>
-
-            <Route path="/proyeccion" element={<ProjectionSimulator />} />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
