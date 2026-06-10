@@ -11,9 +11,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+const passwordRequirements = [
+  'Mínimo 6 caracteres',
+  'No debe ser una contraseña comprometida',
+]
+
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  password: z.string().min(6, '\u200B'),
 })
 
 type LoginForm = z.infer<typeof loginSchema>
@@ -26,6 +31,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -39,8 +45,18 @@ export default function Login() {
       toast.success('Sesión iniciada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { data?: { error?: string } } }
-      toast.error(api.response?.data?.error || 'Credenciales inválidas')
+      const api = err as { response?: { status?: number; data?: { mensaje?: string; error?: string; detalles?: Record<string, string> } } }
+      const data = api.response?.data
+      if (data?.detalles) {
+        for (const [field, message] of Object.entries(data.detalles)) {
+          setError(field as keyof LoginForm, { message })
+        }
+      }
+      const msg =
+        data?.mensaje ||
+        data?.error ||
+        (api.response?.status === 404 ? 'Usuario no registrado' : 'Credenciales inválidas')
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -59,7 +75,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, () => toast.error('Corrige los errores en el formulario'))} className="space-y-4">
           <Input
             label="Email"
             type="email"
@@ -75,7 +91,16 @@ export default function Login() {
               type={showPassword ? 'text' : 'password'}
               placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
-              error={errors.password?.message}
+              error={errors.password ? (
+                <ul className="mt-1 space-y-0.5">
+                  {passwordRequirements.map((req) => (
+                    <li key={req} className="flex items-center gap-1.5 text-[11px]">
+                      <span className="inline-block h-1 w-1 rounded-full bg-error" />
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              ) : undefined}
               {...register('password')}
             />
             <button

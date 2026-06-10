@@ -11,10 +11,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+const passwordRequirements = [
+  'Mínimo 6 caracteres',
+  'No debe ser una contraseña comprometida',
+]
+
 const registerSchema = z
   .object({
     email: z.string().email('Email inválido'),
-    password: z.string().min(6, 'Mínimo 6 caracteres'),
+    password: z.string().min(6, '\u200B'),
     confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -33,6 +38,7 @@ export default function Register() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -46,8 +52,18 @@ export default function Register() {
       toast.success('Cuenta creada correctamente')
       navigate('/dashboard')
     } catch (err: unknown) {
-      const api = err as { response?: { data?: { error?: string } } }
-      toast.error(api.response?.data?.error || 'Error al registrarse')
+      const api = err as { response?: { status?: number; data?: { mensaje?: string; error?: string; detalles?: Record<string, string> } } }
+      const data = api.response?.data
+      if (data?.detalles) {
+        for (const [field, message] of Object.entries(data.detalles)) {
+          setError(field as keyof RegisterForm, { message })
+        }
+      }
+      const msg =
+        data?.mensaje ||
+        data?.error ||
+        (api.response?.status === 409 ? 'El email ya está registrado' : 'Error al registrarse')
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -66,7 +82,7 @@ export default function Register() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, () => toast.error('Corrige los errores en el formulario'))} className="space-y-4">
           <Input
             label="Email"
             type="email"
@@ -93,6 +109,16 @@ export default function Register() {
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
+            {(
+              <ul className="mt-1 space-y-0.5">
+                {passwordRequirements.map((req) => (
+                  <li key={req} className={`flex items-center gap-1.5 text-[11px] ${errors.password ? 'text-error' : 'text-on-surface-variant'}`}>
+                    <span className={`inline-block h-1 w-1 rounded-full ${errors.password ? 'bg-error' : 'bg-outline-variant'}`} />
+                    {req}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="relative">

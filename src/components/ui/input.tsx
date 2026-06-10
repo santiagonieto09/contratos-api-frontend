@@ -1,9 +1,9 @@
-import { forwardRef, type InputHTMLAttributes } from 'react'
+import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
-  error?: string
+  error?: ReactNode
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -35,9 +35,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p id={`${inputId}-error`} className="text-xs text-error" role="alert">
+          <div id={`${inputId}-error`} className="text-xs text-error" role="alert">
             {error}
-          </p>
+          </div>
         )}
       </div>
     )
