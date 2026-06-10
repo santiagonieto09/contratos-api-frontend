@@ -32,6 +32,10 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: 'test@test.com',
+      password: '123456',
+    },
   })
 
   const onSubmit = async (data: LoginForm) => {
@@ -67,9 +71,9 @@ export default function Login() {
             <Logo className="h-6 w-6" />
           </div>
           <h1 className="text-xl font-semibold text-on-surface">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-on-surface-variant">
-            Ingresa a tu panel de contratos
-          </p>
+        <p className="mt-1 text-sm text-on-surface-variant">
+          Ingresa a tu panel de contratos
+        </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit, () => toast.error('Corrige los errores en el formulario'))} className="space-y-4">
