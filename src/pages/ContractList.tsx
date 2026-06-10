@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { contratoService } from '@/services/contratoService'
 import type { Contrato } from '@/types'
-import { FileText, ArrowRight, Loader2, Search } from 'lucide-react'
+import { FileText, ArrowRight, Loader2, Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -42,7 +42,8 @@ export default function ContractList() {
         </div>
         <Link to="/contratos/nuevo">
           <Button variant="primary" size="sm">
-            + Nuevo
+            <Plus size={16} />
+            Nuevo
           </Button>
         </Link>
       </div>

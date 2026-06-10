@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Calculator, Save } from 'lucide-react'
+import { Loader2, Calculator, Save, CircleHelp } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { MAX_MESES_PLAZO, formatCurrency } from '@/lib/utils'
 import type { ApiErrorResponse } from '@/types'
 import { CuotasTable } from '@/components/CuotasTable'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 const MAX_VALOR = 999_999_999.99
 
@@ -184,12 +185,16 @@ export default function CreateContract() {
                 <label className="text-sm font-medium text-on-surface-variant">
                   Método de pago
                 </label>
-                <span
-                  className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
-                  title="Selecciona la forma de pago del contrato"
-                >
-                  ?
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center rounded-full text-on-surface-variant cursor-help">
+                      <CircleHelp size={14} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center">
+                    Selecciona la forma de pago del contrato
+                  </TooltipContent>
+                </Tooltip>
               </div>
               {loadingMetodos ? (
                 <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">

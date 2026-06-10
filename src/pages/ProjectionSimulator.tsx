@@ -4,9 +4,10 @@ import type { MetodoPago, Cuota } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Calculator, TrendingUp } from 'lucide-react'
+import { Loader2, Calculator, TrendingUp, CircleHelp } from 'lucide-react'
 import { formatCurrency, MAX_MESES_PLAZO } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -167,12 +168,16 @@ export default function ProjectionSimulator() {
               <label className="text-sm font-medium text-on-surface-variant">
                 Método de pago
               </label>
-              <span
-                className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
-                title="Selecciona la forma de pago del contrato"
-              >
-                ?
-              </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center rounded-full text-on-surface-variant cursor-help">
+                      <CircleHelp size={14} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center">
+                    Selecciona la forma de pago del contrato
+                  </TooltipContent>
+                </Tooltip>
             </div>
             {loadingMetodos ? (
               <div className="flex h-9 items-center gap-2 text-sm text-on-surface-variant">

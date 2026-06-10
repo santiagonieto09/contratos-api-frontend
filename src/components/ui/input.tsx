@@ -1,5 +1,7 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { CircleHelp } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -24,12 +26,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               </label>
             )}
             {description && (
-              <span
-                className="inline-flex items-center justify-center rounded-full bg-outline-variant/40 px-1.5 py-0.5 text-[10px] font-medium text-on-surface-variant cursor-help"
-                title={description}
-              >
-                ?
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center justify-center rounded-full text-on-surface-variant cursor-help">
+                    <CircleHelp size={14} />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  {description}
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         )}

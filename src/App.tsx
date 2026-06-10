@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AuthProvider } from '@/context/AuthContext'
 import { PrivateLayout, PublicLayout, GuestLayout } from '@/components/Layout'
 import { setNavigateToLogin } from '@/services/api'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
@@ -24,25 +25,27 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <NavigateSetter />
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-surface" />}>
-          <Routes>
-            <Route element={<GuestLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Route>
+        <TooltipProvider delayDuration={300}>
+          <NavigateSetter />
+          <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-surface" />}>
+            <Routes>
+              <Route element={<GuestLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Route>
 
-            <Route element={<PrivateLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contratos" element={<ContractList />} />
-              <Route path="/contratos/nuevo" element={<CreateContract />} />
-              <Route path="/contratos/:id" element={<ContractDetail />} />
-              <Route path="/proyeccion" element={<ProjectionSimulator />} />
-            </Route>
+              <Route element={<PrivateLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/contratos" element={<ContractList />} />
+                <Route path="/contratos/nuevo" element={<CreateContract />} />
+                <Route path="/contratos/:id" element={<ContractDetail />} />
+                <Route path="/proyeccion" element={<ProjectionSimulator />} />
+              </Route>
 
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Suspense>
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Suspense>
+        </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>
   )
