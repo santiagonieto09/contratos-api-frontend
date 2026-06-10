@@ -8,7 +8,7 @@ interface CuotasTableProps {
 
 export function CuotasTable({ cuotas, showFecha = true }: CuotasTableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-bright">
+    <div className="overflow-x-auto rounded-lg border border-outline-variant/30 bg-surface-bright">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-outline-variant/30 bg-surface-low">

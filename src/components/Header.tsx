@@ -33,13 +33,15 @@ export function Header() {
           </Link>
         </div>
 
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-md p-2 text-on-surface-variant hover:bg-surface-container lg:hidden cursor-pointer"
-          aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-        >
-          {menuOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        {user && (
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="rounded-md p-2 text-on-surface-variant hover:bg-surface-container lg:hidden cursor-pointer"
+            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          >
+            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        )}
 
         {user && (
           <div className="hidden items-center gap-2 lg:flex">

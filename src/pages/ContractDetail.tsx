@@ -72,7 +72,7 @@ export default function ContractDetail() {
         className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         <ArrowLeft size={16} />
-        Volver a contratos
+        Atrás
       </Link>
 
       {/* Contract header */}
