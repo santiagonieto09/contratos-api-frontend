@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { contratoService } from '@/services/contratoService'
 import type { Contrato, Cuota, ResumenCuotas } from '@/types'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
 
 import { formatCurrency } from '@/lib/utils'
 import { CuotasTable } from '@/components/CuotasTable'
@@ -33,7 +32,10 @@ export default function ContractDetail() {
         setCuotas(cu.cuotas)
         setResumen(cu.resumen)
       })
-      .catch(() => setError('Error al cargar el contrato'))
+      .catch((err) => {
+        console.error('Error loading contract:', err)
+        setError('Error al cargar el contrato')
+      })
       .finally(() => {
         if (!cancelled) setLoading(false)
       })

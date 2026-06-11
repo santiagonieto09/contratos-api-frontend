@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (token: string) => {
     sessionStorage.setItem('token', token)
-    authService.perfil().then(setUser)
+    authService.perfil().then(setUser).catch(() => logout())
   }
 
   const logout = () => {
